@@ -1,0 +1,40 @@
+{
+    "$schema": "https://www.schemastore.org/package.json",
+    "name": "@inertia-studio/ui",
+    "version": "0.1.0",
+    "description": "UI components for Inertia Studio admin panels — React, Vue, and Svelte.",
+    "type": "module",
+    "exports": {
+        "./react": "./src/react/index.ts",
+        "./vue": "./src/vue/index.ts",
+        "./svelte": "./src/svelte/index.ts"
+    },
+    "files": [
+        "src"
+    ],
+    "scripts": {
+        "types:check": "tsc --noEmit"
+    },
+    "dependencies": {
+        "clsx": "^2.1.1",
+        "tailwind-merge": "^3.0.1",
+        "class-variance-authority": "^0.7.1"
+    },
+    "peerDependencies": {
+        "react": "^19.0.0",
+        "react-dom": "^19.0.0",
+        "@inertiajs/react": "^3.0.0",
+        "tailwindcss": "^4.0.0"
+    },
+    "peerDependenciesMeta": {
+        "react": { "optional": true },
+        "react-dom": { "optional": true },
+        "@inertiajs/react": { "optional": true }
+    },
+    "devDependencies": {
+        "typescript": "^5.7.2",
+        "@types/react": "^19.2.0",
+        "@types/react-dom": "^19.2.0"
+    },
+    "license": "MIT"
+}
