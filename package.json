@@ -1,7 +1,7 @@
 {
     "$schema": "https://www.schemastore.org/package.json",
     "name": "@inertia-studio/ui",
-    "version": "0.2.2",
+    "version": "0.2.3",
     "description": "UI components for Inertia Studio admin panels — React, Vue, and Svelte.",
     "type": "module",
     "exports": {

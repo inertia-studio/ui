@@ -79,25 +79,77 @@
     transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-/* Form elements — ensure proper colors in light mode */
-[data-studio-panel] input,
+/* Form inputs — override host app styles */
+[data-studio-panel] input:not([type="checkbox"]):not([type="radio"]),
 [data-studio-panel] textarea,
 [data-studio-panel] select {
-    background-color: rgb(var(--s-input, 255 255 255));
-    color: rgb(var(--s-text, 15 23 42));
+    background-color: rgb(var(--s-input, 255 255 255)) !important;
+    color: rgb(var(--s-text, 15 23 42)) !important;
 }
 
+/* Focus — subtle accent ring, no thick browser outline */
+[data-studio-panel] input:focus,
+[data-studio-panel] textarea:focus,
+[data-studio-panel] select:focus {
+    outline: none !important;
+    box-shadow: 0 0 0 1px rgb(var(--s-accent, 79 70 229) / 0.3) !important;
+    border-color: rgb(var(--s-accent, 79 70 229)) !important;
+}
+
+/* Checkbox & Radio — custom appearance */
 [data-studio-panel] input[type="checkbox"],
 [data-studio-panel] input[type="radio"] {
-    background-color: rgb(var(--s-input, 255 255 255));
-    border-color: rgb(var(--s-border-strong, 203 213 225));
-    color: rgb(var(--s-accent, 79 70 229));
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    width: 1rem !important;
+    height: 1rem !important;
+    border: 1.5px solid rgb(var(--s-border-strong, 203 213 225)) !important;
+    border-radius: 0.25rem !important;
+    background-color: rgb(var(--s-input, 255 255 255)) !important;
+    cursor: pointer;
+    position: relative;
+    flex-shrink: 0;
+    padding: 0 !important;
+    margin: 0;
+}
+
+[data-studio-panel] input[type="radio"] {
+    border-radius: 50% !important;
 }
 
 [data-studio-panel] input[type="checkbox"]:checked,
 [data-studio-panel] input[type="radio"]:checked {
-    background-color: rgb(var(--s-accent, 79 70 229));
-    border-color: rgb(var(--s-accent, 79 70 229));
+    background-color: rgb(var(--s-accent, 79 70 229)) !important;
+    border-color: rgb(var(--s-accent, 79 70 229)) !important;
+}
+
+[data-studio-panel] input[type="checkbox"]:checked::after {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 1px;
+    width: 4px;
+    height: 8px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+[data-studio-panel] input[type="radio"]:checked::after {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 4px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: white;
+}
+
+[data-studio-panel] input[type="checkbox"]:focus,
+[data-studio-panel] input[type="radio"]:focus {
+    outline: none !important;
+    box-shadow: 0 0 0 2px rgb(var(--s-accent, 79 70 229) / 0.2) !important;
 }
 
 /* View Transitions — page navigation */
