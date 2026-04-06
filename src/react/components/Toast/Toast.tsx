@@ -106,7 +106,7 @@ export function ToastContainer() {
     }, []);
 
     // Listen for flash messages from Inertia page visits
-    const lastFlashRef = useRef<string | null>(null);
+    const shownFlashesRef = useRef<Set<string>>(new Set());
 
     useEffect(() => {
         const remove = router.on('success', (event) => {
@@ -114,16 +114,28 @@ export function ToastContainer() {
             if (!pg?.props) return;
 
             const flash = pg.props.flash as { success?: string | null; error?: string | null } | undefined;
-            const msg = flash?.success ?? flash?.error ?? null;
-            const type = flash?.success ? 'success' : flash?.error ? 'error' : null;
+            const url = (pg.props as Record<string, unknown>).url as string ?? '';
 
-            // Only toast if it's a new flash message (not the same one re-delivered on partial reloads)
-            if (msg && type && msg !== lastFlashRef.current) {
-                lastFlashRef.current = msg;
-                toast({ type, title: msg });
+            if (flash?.success) {
+                // Key by message + URL so the same action on the same page won't re-toast
+                const key = `s:${flash.success}`;
+                if (!shownFlashesRef.current.has(key)) {
+                    shownFlashesRef.current.add(key);
+                    toast({ type: 'success', title: flash.success });
+                }
+            }
 
-                // Clear after a tick so the same message can fire again if it's a genuinely new action
-                setTimeout(() => { lastFlashRef.current = null; }, 100);
+            if (flash?.error) {
+                const key = `e:${flash.error}`;
+                if (!shownFlashesRef.current.has(key)) {
+                    shownFlashesRef.current.add(key);
+                    toast({ type: 'error', title: flash.error });
+                }
+            }
+
+            // When flash is empty, clear the shown set so future flashes can fire
+            if (!flash?.success && !flash?.error) {
+                shownFlashesRef.current.clear();
             }
         });
         return () => remove();
