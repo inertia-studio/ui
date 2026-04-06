@@ -31,17 +31,26 @@ export function AuthLayout({ panel, children }: AuthLayoutProps) {
         <div className="flex min-h-screen items-center justify-center bg-s-bg px-4">
             <div className="w-full max-w-md">
                 {/* Brand */}
-                <div className="mb-8 text-center">
+                <div className="mb-8 flex flex-col items-center gap-3">
                     {panel.brandLogo ? (
                         <img
                             src={darkMode && (panel as Record<string, unknown>).brandLogoDark ? String((panel as Record<string, unknown>).brandLogoDark) : panel.brandLogo}
                             alt={panel.brandName}
-                            className="mx-auto h-10 w-auto"
+                            className="h-10 w-auto"
                         />
                     ) : (
-                        <h1 className="text-2xl font-bold text-s-text tracking-tight">
-                            {panel.brandName}
-                        </h1>
+                        <>
+                            {(panel as Record<string, unknown>).brandIcon && (
+                                <img
+                                    src={String((panel as Record<string, unknown>).brandIcon)}
+                                    alt=""
+                                    className="h-10 w-auto"
+                                />
+                            )}
+                            <h1 className="text-2xl font-bold text-s-text tracking-tight">
+                                {panel.brandName}
+                            </h1>
+                        </>
                     )}
                 </div>
 

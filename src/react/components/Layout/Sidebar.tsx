@@ -48,15 +48,22 @@ function SidebarContent({ collapsed, onToggleCollapse }: { collapsed: boolean; o
                         />
                     ) : (
                         <>
-                            <div className="w-8 h-8 rounded-lg bg-s-accent flex items-center justify-center shrink-0">
-                                <svg className="w-4 h-4 text-s-accent-fg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
-                                </svg>
-                            </div>
+                            {(panel as Record<string, unknown>)?.brandIcon ? (
+                                <img
+                                    src={String((panel as Record<string, unknown>).brandIcon)}
+                                    alt=""
+                                    className="w-8 h-8 shrink-0 object-contain"
+                                />
+                            ) : (
+                                <div className="w-8 h-8 rounded-lg bg-s-accent flex items-center justify-center shrink-0">
+                                    <svg className="w-4 h-4 text-s-accent-fg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
+                                    </svg>
+                                </div>
+                            )}
                             {!collapsed && (
                                 <div>
                                     <span className="text-sm font-semibold text-s-text">{panel?.brandName ?? 'Studio'}</span>
-                                    <span className="block text-[11px] text-s-text-muted">Admin Panel</span>
                                 </div>
                             )}
                         </>
