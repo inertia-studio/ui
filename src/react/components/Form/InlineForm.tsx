@@ -8,6 +8,7 @@ import type {
 } from '../../../shared/types/schema';
 import { FieldWrapper } from './FieldWrapper';
 import { Section } from './Section';
+import { Wizard } from './Wizard';
 import { Tabs } from './Tabs';
 import { fieldComponentMap } from './fields';
 
@@ -27,6 +28,11 @@ function extractDefaults(components: FormComponentSchema[]): Record<string, unkn
         } else if (component.type === 'tabs') {
             for (const tab of (component as TabsSchema).tabs) {
                 Object.assign(data, extractDefaults(tab.schema));
+            }
+        } else if (component.type === 'wizard') {
+            const steps = (component as unknown as { steps: { schema: FormComponentSchema[] }[] }).steps ?? [];
+            for (const step of steps) {
+                Object.assign(data, extractDefaults(step.schema));
             }
         } else {
             const field = component as FieldSchema;
@@ -97,6 +103,14 @@ export function InlineForm({ schema, label, actionUrl, method = 'POST' }: Inline
                         <Tabs key={index} schema={component as TabsSchema}>
                             {(tabSchema) => renderComponents(tabSchema)}
                         </Tabs>
+                    );
+                }
+
+                if (component.type === 'wizard') {
+                    return (
+                        <Wizard key={index} schema={component as unknown as { type: 'wizard'; showStepNumbers: boolean; allowSkip: boolean; steps: { label: string; description?: string | null; icon?: string | null; columns: number; schema: unknown[] }[] }}>
+                            {(stepSchema) => renderComponents(stepSchema as FormComponentSchema[])}
+                        </Wizard>
                     );
                 }
 

@@ -29,6 +29,9 @@ import { MoneyField } from './MoneyField';
 import { PercentField } from './PercentField';
 import { BelongsToField } from './BelongsToField';
 import { RichEditorField } from './RichEditorField';
+import { OtpField } from './OtpField';
+import { MaskedField } from './MaskedField';
+import { RatingField } from './RatingField';
 
 export {
     TextField,
@@ -61,6 +64,9 @@ export {
     PercentField,
     BelongsToField,
     RichEditorField,
+    OtpField,
+    MaskedField,
+    RatingField,
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -95,4 +101,7 @@ export const fieldComponentMap: Record<string, ComponentType<any>> = {
     percent: PercentField,
     belongsTo: BelongsToField,
     richEditor: RichEditorField,
+    otp: OtpField,
+    masked: MaskedField,
+    rating: RatingField,
 };

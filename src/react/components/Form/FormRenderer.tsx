@@ -12,6 +12,7 @@ import { FieldWrapper } from './FieldWrapper';
 import { Section } from './Section';
 import { fieldComponentMap } from './fields';
 import { Tabs } from './Tabs';
+import { Wizard } from './Wizard';
 
 interface FormRendererProps {
     schema: FormSchema;
@@ -33,6 +34,11 @@ function extractDefaults(
         } else if (component.type === 'tabs') {
             for (const tab of (component as TabsSchema).tabs) {
                 Object.assign(data, extractDefaults(tab.schema, record));
+            }
+        } else if (component.type === 'wizard') {
+            const steps = (component as unknown as { steps: { schema: FormComponentSchema[] }[] }).steps ?? [];
+            for (const step of steps) {
+                Object.assign(data, extractDefaults(step.schema, record));
             }
         } else {
             const field = component as FieldSchema;
@@ -131,6 +137,16 @@ export function FormRenderer({
                                 renderComponents(tabSchema, data, onFieldChange, errors)
                             }
                         </Tabs>
+                    );
+                }
+
+                if (component.type === 'wizard') {
+                    return (
+                        <Wizard key={index} schema={component as unknown as { type: 'wizard'; showStepNumbers: boolean; allowSkip: boolean; steps: { label: string; description?: string | null; icon?: string | null; columns: number; schema: unknown[] }[] }}>
+                            {(stepSchema) =>
+                                renderComponents(stepSchema as FormComponentSchema[], data, onFieldChange, errors)
+                            }
+                        </Wizard>
                     );
                 }
 
