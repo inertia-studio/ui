@@ -38,7 +38,7 @@ export function BulkActionBar({ selectedIds, actions, panelPath, module, onClear
         setProcessing(true);
         setConfirmingAction(null);
 
-        const url = action.url ?? `${panelPath}/${module.slug}/bulk-action/${action.name}`;
+        const url = action.url ?? `${panelPath}/${module.slug}/bulk-actions/${action.name}`;
 
         router.post(url, {
             ids: selectedIds,
