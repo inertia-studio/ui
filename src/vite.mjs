@@ -17,12 +17,33 @@ const STUDIO_PAGE_MAP = {
 /**
  * Inertia Studio Vite plugin.
  *
+ * Intercepts page resolution in createInertiaApp to handle Studio:: pages.
+ * Works with @inertiajs/vite's automatic resolution — no manual resolve needed.
+ *
  * @param {StudioOptions} [options]
  * @returns {import('vite').Plugin}
  */
 export default function studio(options = {}) {
     return {
         name: 'inertia-studio',
+        enforce: 'pre',
+
+        transform(code, id) {
+            // Only transform the app entry file
+            if (!id.match(/app\.(tsx?|jsx?)$/)) return null;
+            if (!code.includes('createInertiaApp')) return null;
+
+            // Inject the Studio page resolver import and the __resolveStudioPage helper
+            // This runs BEFORE @inertiajs/vite transforms the code
+            const injection = `
+import { resolveStudioPage as __resolveStudioPage } from '@inertia-studio/ui/vite';
+`;
+            return {
+                code: injection + code,
+                map: null,
+            };
+        },
+
         config() {
             return {
                 optimizeDeps: {
