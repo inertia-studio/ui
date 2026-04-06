@@ -3,6 +3,7 @@ import { router } from '@inertiajs/react';
 import { cn } from '../../../shared/utils/cn';
 import { useStudioHooks } from '../../hooks/useStudioHooks';
 import { SchemaIcon } from '../Icon';
+import { ConfirmationModal } from '../Actions/ConfirmationModal';
 
 function getNestedValue(obj: Record<string, unknown>, path: string): unknown {
     return path.split('.').reduce<unknown>((o, k) => (o as Record<string, unknown>)?.[k], obj);
@@ -153,6 +154,7 @@ export function DataTable({ schema, data, module, panelPath, onSimpleEdit }: Dat
 
     // Bulk selection
     const [selectedIds, setSelectedIds] = useState<Array<string | number>>([]);
+    const [confirmAction, setConfirmAction] = useState<{ action: Record<string, unknown>; record: Record<string, unknown> } | null>(null);
 
     const allRecordIds = useMemo(() => {
         return data.data.map((record) => record.id as string | number);
@@ -228,9 +230,8 @@ export function DataTable({ schema, data, module, panelPath, onSimpleEdit }: Dat
                 break;
             case 'delete':
                 if (action.requiresConfirmation) {
-                    if (!confirm(action.confirmationMessage ?? 'Are you sure you want to delete this record?')) {
-                        return;
-                    }
+                    setConfirmAction({ action, record });
+                    return;
                 }
                 router.delete(`${moduleBase}/${recordId}`, {
                     preserveState: true,
@@ -541,6 +542,25 @@ export function DataTable({ schema, data, module, panelPath, onSimpleEdit }: Dat
                     onClearSelection={handleClearSelection}
                 />
             )}
+
+            {/* Row action confirmation modal */}
+            <ConfirmationModal
+                open={confirmAction !== null}
+                onClose={() => setConfirmAction(null)}
+                onConfirm={() => {
+                    if (!confirmAction) return;
+                    const recordId = confirmAction.record.id as string | number;
+                    router.delete(`${panelPath}/${module.slug}/${recordId}`, {
+                        preserveState: true,
+                        preserveScroll: true,
+                    });
+                    setConfirmAction(null);
+                }}
+                heading="Delete Record"
+                message={String(confirmAction?.action.confirmationMessage ?? 'Are you sure you want to delete this record? This action cannot be undone.')}
+                confirmLabel="Delete"
+                isDangerous
+            />
         </div>
     );
 }

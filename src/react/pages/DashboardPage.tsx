@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { router } from '@inertiajs/react';
 import { StudioProvider } from '../context/StudioContext';
 import { PanelLayout } from '../components/Layout';
 import { InlineTable } from '../components/Table/InlineTable';
 import { InlineForm } from '../components/Form/InlineForm';
+import { ConfirmationModal } from '../components/Actions/ConfirmationModal';
 import { Chart, Sparkline } from '../components/Charts';
 import { Icon } from '../components/Icon';
 import { cn } from '../../shared/utils/cn';
@@ -67,6 +68,51 @@ function StatCard({ data }: { data: Record<string, unknown> }) {
                 </p>
             )}
         </div>
+    );
+}
+
+function SchemaActionButton({ item }: { item: Record<string, unknown> }) {
+    const [confirming, setConfirming] = useState(false);
+    const btnColor = item.color as string ?? 'primary';
+    const btnClasses = btnColor === 'danger'
+        ? 'bg-red-600 text-white hover:bg-red-700'
+        : btnColor === 'info'
+            ? 'bg-s-accent/10 text-s-accent hover:bg-s-accent/20'
+            : 'bg-s-accent text-s-accent-fg hover:opacity-90';
+
+    const handleClick = useCallback(() => {
+        if (item.requiresConfirmation) {
+            setConfirming(true);
+            return;
+        }
+        if (item.url) router.visit(String(item.url));
+    }, [item]);
+
+    const handleConfirm = useCallback(() => {
+        setConfirming(false);
+        if (item.url) router.visit(String(item.url));
+    }, [item]);
+
+    return (
+        <>
+            <button
+                type="button"
+                onClick={handleClick}
+                className={cn('inline-flex items-center justify-center gap-2 rounded-xl border border-s-border px-4 py-4 text-sm font-medium transition-colors w-full', btnClasses)}
+            >
+                {item.icon && <Icon name={(item.icon as Record<string, string>).name} size="sm" />}
+                {String(item.label)}
+            </button>
+            <ConfirmationModal
+                open={confirming}
+                onClose={() => setConfirming(false)}
+                onConfirm={handleConfirm}
+                heading={String(item.label)}
+                message={String(item.confirmationMessage ?? 'Are you sure?')}
+                confirmLabel="Confirm"
+                isDangerous={btnColor === 'danger'}
+            />
+        </>
     );
 }
 
@@ -164,27 +210,7 @@ function SchemaRenderer({ items }: { items: Array<Record<string, unknown>> }) {
 
                 // Action button
                 if (type === 'action') {
-                    const btnColor = item.color as string ?? 'primary';
-                    const btnClasses = btnColor === 'danger'
-                        ? 'bg-red-600 text-white hover:bg-red-700'
-                        : btnColor === 'info'
-                            ? 'bg-s-accent/10 text-s-accent hover:bg-s-accent/20'
-                            : 'bg-s-accent text-s-accent-fg hover:opacity-90';
-
-                    return (
-                        <button
-                            key={i}
-                            type="button"
-                            onClick={() => {
-                                if (item.requiresConfirmation && !confirm(String(item.confirmationMessage ?? 'Are you sure?'))) return;
-                                if (item.url) router.visit(String(item.url));
-                            }}
-                            className={cn('inline-flex items-center justify-center gap-2 rounded-xl border border-s-border px-4 py-4 text-sm font-medium transition-colors w-full', btnClasses)}
-                        >
-                            {item.icon && <Icon name={(item.icon as Record<string, string>).name} size="sm" />}
-                            {String(item.label)}
-                        </button>
-                    );
+                    return <SchemaActionButton key={i} item={item} />;
                 }
 
                 // Tabs
