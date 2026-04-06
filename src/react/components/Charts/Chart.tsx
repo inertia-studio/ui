@@ -6,6 +6,12 @@ interface DataPoint {
     color?: string;
 }
 
+interface Series {
+    name: string;
+    data: number[];
+    color?: string;
+}
+
 interface ChartProps {
     type: 'line' | 'area' | 'bar' | 'donut';
     data: DataPoint[];
@@ -14,6 +20,9 @@ interface ChartProps {
     color?: string;
     colors?: string[];
     height?: string;
+    series?: Series[];
+    labels?: string[];
+    stacked?: boolean;
 }
 
 const DEFAULT_COLOR = 'rgb(var(--s-accent))';
@@ -28,8 +37,11 @@ function formatValue(val: number): string {
     return val % 1 === 0 ? String(val) : val.toFixed(1);
 }
 
-export function Chart({ type, data, label, description, color, colors, height = '200px' }: ChartProps) {
-    if (!data || data.length === 0) {
+export function Chart({ type, data, label, description, color, colors, height = '200px', series, labels, stacked }: ChartProps) {
+    const hasMultiSeries = series && series.length > 0 && labels && labels.length > 0;
+    const hasData = hasMultiSeries || (data && data.length > 0);
+
+    if (!hasData) {
         return (
             <div className="rounded-xl border border-s-border bg-s-surface p-5">
                 {label && <p className="text-sm font-medium text-s-text mb-2">{label}</p>}
@@ -50,8 +62,21 @@ export function Chart({ type, data, label, description, color, colors, height = 
             )}
             {type === 'donut' ? (
                 <DonutChart data={data} colors={colors} height={height} />
+            ) : hasMultiSeries ? (
+                <MultiSeriesChart type={type} series={series!} labels={labels!} stacked={stacked} colors={colors} height={height} />
             ) : (
                 <CartesianChart type={type} data={data} color={color} height={height} />
+            )}
+            {/* Legend for multi-series */}
+            {hasMultiSeries && (
+                <div className="flex items-center gap-4 mt-3 pt-3 border-t border-s-border">
+                    {series!.map((s, i) => (
+                        <div key={s.name} className="flex items-center gap-1.5">
+                            <div className="w-2.5 h-2.5 rounded-full" style={{ background: s.color || CHART_COLORS[i % CHART_COLORS.length] }} />
+                            <span className="text-xs text-s-text-muted">{s.name}</span>
+                        </div>
+                    ))}
+                </div>
             )}
         </div>
     );
@@ -234,6 +259,216 @@ function CartesianChart({ type, data, color, height }: { type: 'line' | 'area' |
                     >
                         <p className="text-[11px] font-medium">{formatValue(activePoint.value)}</p>
                         <p className="text-[9px] opacity-70">{activePoint.label}</p>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
+// ─── Multi-Series (Stacked / Grouped) ───────────────────────
+
+function MultiSeriesChart({ type, series, labels, stacked, colors, height }: {
+    type: 'line' | 'area' | 'bar';
+    series: Series[];
+    labels: string[];
+    stacked?: boolean;
+    colors?: string[];
+    height: string;
+}) {
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [activeIndex, setActiveIndex] = useState<number | null>(null);
+
+    const padding = { top: 8, right: 8, bottom: 24, left: 40 };
+    const viewWidth = 400;
+    const viewHeight = 180;
+    const chartW = viewWidth - padding.left - padding.right;
+    const chartH = viewHeight - padding.top - padding.bottom;
+    const paletteColors = colors || CHART_COLORS;
+
+    const { maxVal, yTicks } = useMemo(() => {
+        let max: number;
+        if (stacked) {
+            max = Math.max(
+                ...labels.map((_, i) => series.reduce((sum, s) => sum + (s.data[i] ?? 0), 0)),
+                1,
+            );
+        } else {
+            max = Math.max(...series.flatMap((s) => s.data), 1);
+        }
+
+        const tickCount = 4;
+        const ticks = Array.from({ length: tickCount + 1 }, (_, i) => {
+            const val = (max / tickCount) * i;
+            return { value: val, y: padding.top + chartH - (val / max) * chartH };
+        });
+
+        return { maxVal: max, yTicks: ticks };
+    }, [series, labels, stacked, chartH]);
+
+    const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+        const container = containerRef.current;
+        if (!container) return;
+        const rect = container.getBoundingClientRect();
+        const mouseX = ((e.clientX - rect.left) / rect.width) * viewWidth;
+        const slotWidth = chartW / labels.length;
+        const idx = Math.floor((mouseX - padding.left) / slotWidth);
+        setActiveIndex(Math.max(0, Math.min(idx, labels.length - 1)));
+    }, [labels.length, chartW]);
+
+    return (
+        <div ref={containerRef} className="relative" style={{ height }} onMouseMove={handleMouseMove} onMouseLeave={() => setActiveIndex(null)}>
+            <svg viewBox={`0 0 ${viewWidth} ${viewHeight}`} className="w-full h-full" preserveAspectRatio="none">
+                {/* Grid */}
+                {yTicks.map((tick, i) => (
+                    <g key={i}>
+                        <line x1={padding.left} y1={tick.y} x2={viewWidth - padding.right} y2={tick.y} stroke="rgb(var(--s-border))" strokeWidth="0.5" strokeDasharray="3,3" />
+                        <text x={padding.left - 4} y={tick.y + 3} textAnchor="end" fontSize="8" fill="rgb(var(--s-text-faint))">{formatValue(tick.value)}</text>
+                    </g>
+                ))}
+
+                {/* X labels */}
+                {labels.length <= 12 && labels.map((lbl, i) => (
+                    <text
+                        key={i}
+                        x={padding.left + (i + 0.5) * (chartW / labels.length)}
+                        y={viewHeight - 4}
+                        textAnchor="middle" fontSize="7"
+                        fill={activeIndex === i ? 'rgb(var(--s-text))' : 'rgb(var(--s-text-faint))'}
+                        fontWeight={activeIndex === i ? '600' : '400'}
+                    >{lbl}</text>
+                ))}
+
+                {/* Crosshair */}
+                {activeIndex !== null && (
+                    <line
+                        x1={padding.left + (activeIndex + 0.5) * (chartW / labels.length)}
+                        y1={padding.top}
+                        x2={padding.left + (activeIndex + 0.5) * (chartW / labels.length)}
+                        y2={padding.top + chartH}
+                        stroke="rgb(var(--s-text-faint))" strokeWidth="0.5" strokeDasharray="2,2" vectorEffect="non-scaling-stroke"
+                    />
+                )}
+
+                {type === 'bar' ? (
+                    // Stacked / grouped bars
+                    labels.map((_, li) => {
+                        const slotWidth = chartW / labels.length;
+                        const slotX = padding.left + li * slotWidth;
+
+                        if (stacked) {
+                            let yOffset = 0;
+                            return series.map((s, si) => {
+                                const val = s.data[li] ?? 0;
+                                const barH = (val / maxVal) * chartH;
+                                yOffset += barH;
+                                return (
+                                    <rect
+                                        key={`${li}-${si}`}
+                                        x={slotX + slotWidth * 0.15}
+                                        y={padding.top + chartH - yOffset}
+                                        width={slotWidth * 0.7}
+                                        height={barH}
+                                        rx="1"
+                                        fill={s.color || paletteColors[si % paletteColors.length]}
+                                        opacity={activeIndex === null || activeIndex === li ? 0.85 : 0.35}
+                                        className="transition-opacity duration-100"
+                                    />
+                                );
+                            });
+                        } else {
+                            // Grouped
+                            const barW = (slotWidth * 0.7) / series.length;
+                            return series.map((s, si) => {
+                                const val = s.data[li] ?? 0;
+                                const barH = (val / maxVal) * chartH;
+                                return (
+                                    <rect
+                                        key={`${li}-${si}`}
+                                        x={slotX + slotWidth * 0.15 + si * barW}
+                                        y={padding.top + chartH - barH}
+                                        width={barW - 1}
+                                        height={barH}
+                                        rx="1"
+                                        fill={s.color || paletteColors[si % paletteColors.length]}
+                                        opacity={activeIndex === null || activeIndex === li ? 0.85 : 0.35}
+                                        className="transition-opacity duration-100"
+                                    />
+                                );
+                            });
+                        }
+                    })
+                ) : (
+                    // Stacked area / multi-line
+                    series.map((s, si) => {
+                        const seriesColor = s.color || paletteColors[si % paletteColors.length];
+
+                        // For stacked area, accumulate from previous series
+                        const getY = (li: number) => {
+                            if (stacked && type === 'area') {
+                                const stackedVal = series.slice(0, si + 1).reduce((sum, ss) => sum + (ss.data[li] ?? 0), 0);
+                                return padding.top + chartH - (stackedVal / maxVal) * chartH;
+                            }
+                            const val = s.data[li] ?? 0;
+                            return padding.top + chartH - (val / maxVal) * chartH;
+                        };
+
+                        const getBaseY = (li: number) => {
+                            if (stacked && type === 'area' && si > 0) {
+                                const baseVal = series.slice(0, si).reduce((sum, ss) => sum + (ss.data[li] ?? 0), 0);
+                                return padding.top + chartH - (baseVal / maxVal) * chartH;
+                            }
+                            return padding.top + chartH;
+                        };
+
+                        const pts = labels.map((_, li) => ({
+                            x: padding.left + (labels.length === 1 ? chartW / 2 : (li / (labels.length - 1)) * chartW),
+                            y: getY(li),
+                        }));
+
+                        const linePath = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ');
+
+                        return (
+                            <g key={si}>
+                                {type === 'area' && (
+                                    <path
+                                        d={`${linePath} ${labels.map((_, li) => {
+                                            const x = padding.left + (labels.length === 1 ? chartW / 2 : (li / (labels.length - 1)) * chartW);
+                                            return `L${x},${getBaseY(labels.length - 1 - li)}`;
+                                        }).reverse().join(' ')} Z`}
+                                        fill={seriesColor}
+                                        opacity={stacked ? 0.6 : 0.08}
+                                    />
+                                )}
+                                <path d={linePath} fill="none" stroke={seriesColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+                                {pts.length <= 20 && pts.map((p, i) => (
+                                    <circle key={i} cx={p.x} cy={p.y} r={activeIndex === i ? 4 : 2.5} fill={activeIndex === i ? seriesColor : 'rgb(var(--s-surface))'} stroke={seriesColor} strokeWidth="1.5" vectorEffect="non-scaling-stroke" className="transition-all duration-100" />
+                                ))}
+                            </g>
+                        );
+                    })
+                )}
+            </svg>
+
+            {/* Tooltip */}
+            {activeIndex !== null && (
+                <div
+                    className="absolute pointer-events-none z-10"
+                    style={{
+                        left: `${((padding.left + (activeIndex + 0.5) * (chartW / labels.length)) / viewWidth) * 100}%`,
+                        top: '8px',
+                        transform: 'translateX(-50%)',
+                    }}
+                >
+                    <div className="rounded-lg px-2.5 py-1.5 shadow-lg text-center" style={{ background: 'rgb(var(--s-text))', color: 'rgb(var(--s-bg))' }}>
+                        <p className="text-[10px] font-medium opacity-70 mb-0.5">{labels[activeIndex]}</p>
+                        {series.map((s, si) => (
+                            <div key={si} className="flex items-center gap-1.5 text-[11px]">
+                                <div className="w-1.5 h-1.5 rounded-full" style={{ background: s.color || paletteColors[si % paletteColors.length] }} />
+                                <span className="opacity-70">{s.name}:</span>
+                                <span className="font-medium">{formatValue(s.data[activeIndex] ?? 0)}</span>
+                            </div>
+                        ))}
                     </div>
                 </div>
             )}

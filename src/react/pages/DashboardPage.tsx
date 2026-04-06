@@ -418,6 +418,9 @@ function SchemaRenderer({ items }: { items: Array<Record<string, unknown>> }) {
                             color={item.color as string | undefined}
                             colors={item.colors as string[] | undefined}
                             height={item.height as string | undefined}
+                            series={item.series as { name: string; data: number[]; color?: string }[] | undefined}
+                            labels={item.labels as string[] | undefined}
+                            stacked={item.stacked as boolean | undefined}
                         />
                     );
                 }
