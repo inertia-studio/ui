@@ -69,18 +69,35 @@
     --s-accent-fg: var(--studio-dark-accent-fg, 255 255 255);
 }
 
-/* Reset host app's global border-color inside Studio panels */
+/* Isolate Studio panels from host app global styles */
 [data-studio-panel] *,
 [data-studio-panel] *::before,
 [data-studio-panel] *::after {
     border-color: rgb(var(--s-border, 226 232 240));
+    --tw-ring-color: rgb(var(--s-accent, 79 70 229) / 0.3);
+    outline-color: rgb(var(--s-accent, 79 70 229));
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-/* Smooth theme transitions */
-[data-studio-panel] *,
-[data-studio-panel] *::before,
-[data-studio-panel] *::after {
-    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+/* Form elements — ensure proper colors in light mode */
+[data-studio-panel] input,
+[data-studio-panel] textarea,
+[data-studio-panel] select {
+    background-color: rgb(var(--s-input, 255 255 255));
+    color: rgb(var(--s-text, 15 23 42));
+}
+
+[data-studio-panel] input[type="checkbox"],
+[data-studio-panel] input[type="radio"] {
+    background-color: rgb(var(--s-input, 255 255 255));
+    border-color: rgb(var(--s-border-strong, 203 213 225));
+    color: rgb(var(--s-accent, 79 70 229));
+}
+
+[data-studio-panel] input[type="checkbox"]:checked,
+[data-studio-panel] input[type="radio"]:checked {
+    background-color: rgb(var(--s-accent, 79 70 229));
+    border-color: rgb(var(--s-accent, 79 70 229));
 }
 
 /* View Transitions — page navigation */
