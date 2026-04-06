@@ -5,6 +5,7 @@ import { usePanel } from '../../hooks/usePanel';
 import { toast } from '../Toast';
 
 interface Notification {
+    id?: string | null;
     title: string;
     body?: string | null;
     icon?: string | null;
@@ -20,6 +21,13 @@ const dotColorMap: Record<string, string> = {
     danger: 'bg-red-500',
 };
 
+function toastTypeFromColor(color?: string) {
+    if (color === 'danger') return 'error' as const;
+    if (color === 'warning') return 'warning' as const;
+    if (color === 'success') return 'success' as const;
+    return 'info' as const;
+}
+
 export function NotificationBell() {
     const [open, setOpen] = useState(false);
     const { panel } = usePanel();
@@ -27,7 +35,10 @@ export function NotificationBell() {
     const notifications = studio?.notifications ?? [];
     const count = notifications.length;
     const dropdownRef = useRef<HTMLDivElement>(null);
-    const prevCountRef = useRef(count);
+
+    // Track seen notification IDs to detect truly new ones
+    const seenIdsRef = useRef<Set<string>>(new Set());
+    const initializedRef = useRef(false);
 
     // Panel config
     const pollingInterval = (panel as Record<string, unknown>)?.notificationPolling as number ?? 0;
@@ -38,30 +49,39 @@ export function NotificationBell() {
         autoStart: pollingInterval > 0,
     });
 
-    // Toast on new notifications
+    // Detect new notifications and toast them
     useEffect(() => {
-        if (!showToasts) return;
-        if (prevCountRef.current === 0 && count === 0) return;
+        const currentIds = new Set(
+            notifications
+                .map((n) => n.id ?? n.title)
+                .filter(Boolean),
+        );
 
-        if (count > prevCountRef.current) {
-            const newCount = count - prevCountRef.current;
-            const latest = notifications[0];
-
-            if (latest) {
-                toast(
-                    latest.title,
-                    latest.color === 'danger' ? 'error'
-                        : latest.color === 'warning' ? 'warning'
-                        : latest.color === 'success' ? 'success'
-                        : 'info',
-                );
-            } else if (newCount > 1) {
-                toast(`${newCount} new notifications`, 'info');
-            }
+        if (!initializedRef.current) {
+            // First render — seed the seen set, don't toast
+            seenIdsRef.current = currentIds;
+            initializedRef.current = true;
+            return;
         }
 
-        prevCountRef.current = count;
-    }, [count, notifications, showToasts]);
+        if (!showToasts) {
+            seenIdsRef.current = currentIds;
+            return;
+        }
+
+        // Find notifications we haven't seen before
+        const newNotifications = notifications.filter((n) => {
+            const key = n.id ?? n.title;
+            return key && !seenIdsRef.current.has(key);
+        });
+
+        // Toast each new notification
+        for (const n of newNotifications) {
+            toast(n.title, toastTypeFromColor(n.color));
+        }
+
+        seenIdsRef.current = currentIds;
+    }, [notifications, showToasts]);
 
     // Close on click outside
     useEffect(() => {
@@ -112,7 +132,7 @@ export function NotificationBell() {
                         ) : (
                             notifications.map((notification, i) => (
                                 <button
-                                    key={i}
+                                    key={notification.id ?? i}
                                     type="button"
                                     className="w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-s-hover transition-colors border-b border-s-border last:border-b-0"
                                     onClick={() => {
