@@ -99,7 +99,7 @@ export function InlineTable({ schema, data, label }: InlineTableProps) {
             {/* Table */}
             <div className="overflow-x-auto rounded-xl border border-s-border bg-s-surface">
                 <table className="w-full text-sm text-s-text-secondary">
-                    <thead>
+                    <thead className="sticky top-0 z-10 bg-s-surface">
                         <tr className="border-b border-s-border">
                             {schema.columns.map(col => (
                                 <th

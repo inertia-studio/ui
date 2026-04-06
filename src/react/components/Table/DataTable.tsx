@@ -1,8 +1,12 @@
-import { useState, useMemo, useCallback, useEffect, type ReactNode } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, type ReactNode } from 'react';
 import { router } from '@inertiajs/react';
 import { cn } from '../../../shared/utils/cn';
 import { useStudioHooks } from '../../hooks/useStudioHooks';
 import { SchemaIcon } from '../Icon';
+
+function getNestedValue(obj: Record<string, unknown>, path: string): unknown {
+    return path.split('.').reduce<unknown>((o, k) => (o as Record<string, unknown>)?.[k], obj);
+}
 import { cellComponentMap } from './cells';
 import { SearchBar } from './SearchBar';
 import { Pagination } from './Pagination';
@@ -333,7 +337,7 @@ export function DataTable({ schema, data, module, panelPath, onSimpleEdit }: Dat
             {/* Table */}
             <div className="overflow-x-auto rounded-lg border border-s-border bg-s-surface">
                 <table className="w-full text-left text-sm text-s-text-secondary">
-                    <thead className="border-b border-s-border bg-s-surface-alt">
+                    <thead className="border-b border-s-border bg-s-surface-alt sticky top-0 z-10">
                         <tr>
                             {/* Checkbox column */}
                             {hasBulkActions && (
@@ -419,9 +423,35 @@ export function DataTable({ schema, data, module, panelPath, onSimpleEdit }: Dat
                                     ? (invoke('table:row-class', record, rowIndex) as string | null)
                                     : null;
 
+                                // Group header row
+                                const groupByCol = schema.groupBy;
+                                const totalColSpan = visibleColumns.length + (hasBulkActions ? 1 : 0) + (schema.actions.length > 0 ? 1 : 0);
+                                let groupHeader: ReactNode = null;
+
+                                if (groupByCol) {
+                                    const groupVal = String(getNestedValue(record, groupByCol) ?? 'Ungrouped');
+                                    const prevRecord = rowIndex > 0 ? data.data[rowIndex - 1] : null;
+                                    const prevGroupVal = prevRecord ? String(getNestedValue(prevRecord, groupByCol) ?? 'Ungrouped') : null;
+
+                                    if (rowIndex === 0 || groupVal !== prevGroupVal) {
+                                        const groupCount = data.data.filter(
+                                            (r) => String(getNestedValue(r, groupByCol) ?? 'Ungrouped') === groupVal,
+                                        ).length;
+                                        groupHeader = (
+                                            <tr className="bg-s-surface-alt">
+                                                <td colSpan={totalColSpan} className="px-4 py-2">
+                                                    <span className="text-xs font-semibold text-s-text-muted uppercase tracking-wide">{groupVal}</span>
+                                                    <span className="ml-2 text-[11px] text-s-text-faint">{groupCount}</span>
+                                                </td>
+                                            </tr>
+                                        );
+                                    }
+                                }
+
                                 return (
+                                    <React.Fragment key={recordId ?? rowIndex}>
+                                    {groupHeader}
                                     <tr
-                                        key={recordId ?? rowIndex}
                                         className={cn(
                                             'transition-colors hover:bg-s-hover',
                                             isSelected && 'bg-s-accent/5',
@@ -490,6 +520,7 @@ export function DataTable({ schema, data, module, panelPath, onSimpleEdit }: Dat
                                             </td>
                                         )}
                                     </tr>
+                                    </React.Fragment>
                                 );
                             })
                         )}

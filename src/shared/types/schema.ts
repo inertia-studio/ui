@@ -431,6 +431,7 @@ export interface TableSchema {
     defaultSort: { column: string; direction: 'asc' | 'desc' } | null;
     filterColumns: number;
     poll: number;
+    groupBy?: string | null;
 }
 
 // ============================================================================
