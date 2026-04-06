@@ -4,6 +4,7 @@ import { cn } from '../../../shared/utils/cn';
 import { usePanel } from '../../hooks/usePanel';
 import { useStudioContext, type ColorMode } from '../../context/StudioContext';
 import { GlobalSearch } from './GlobalSearch';
+import { NotificationBell } from './NotificationBell';
 
 interface TopbarProps {
     onToggleMobile: () => void;
@@ -143,8 +144,9 @@ export function Topbar({ onToggleMobile }: TopbarProps) {
             </div>
 
             {/* Right */}
-            <div className="flex items-center gap-1.5 shrink-0">
+            <div className="flex items-center gap-1 shrink-0">
                 <ThemeToggle />
+                <NotificationBell />
                 <div className="pl-1.5 ml-1 border-l border-s-border">
                     <UserMenuTrigger />
                 </div>
