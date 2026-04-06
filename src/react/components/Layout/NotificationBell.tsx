@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
-import { router, usePage } from '@inertiajs/react';
+import { router, usePage, usePoll } from '@inertiajs/react';
 import { cn } from '../../../shared/utils/cn';
 import { usePanel } from '../../hooks/usePanel';
+import { toast } from '../Toast';
 
 interface Notification {
     title: string;
@@ -11,13 +12,6 @@ interface Notification {
     url?: string | null;
     time?: string | null;
 }
-
-const colorMap: Record<string, string> = {
-    info: 'bg-s-accent/10 text-s-accent',
-    success: 'bg-emerald-500/10 text-emerald-600',
-    warning: 'bg-amber-500/10 text-amber-600',
-    danger: 'bg-red-500/10 text-red-600',
-};
 
 const dotColorMap: Record<string, string> = {
     info: 'bg-s-accent',
@@ -33,6 +27,41 @@ export function NotificationBell() {
     const notifications = studio?.notifications ?? [];
     const count = notifications.length;
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const prevCountRef = useRef(count);
+
+    // Panel config
+    const pollingInterval = (panel as Record<string, unknown>)?.notificationPolling as number ?? 0;
+    const showToasts = (panel as Record<string, unknown>)?.notificationToasts as boolean ?? true;
+
+    // Poll for new notifications
+    usePoll(pollingInterval * 1000, { only: ['studio'] }, {
+        autoStart: pollingInterval > 0,
+    });
+
+    // Toast on new notifications
+    useEffect(() => {
+        if (!showToasts) return;
+        if (prevCountRef.current === 0 && count === 0) return;
+
+        if (count > prevCountRef.current) {
+            const newCount = count - prevCountRef.current;
+            const latest = notifications[0];
+
+            if (latest) {
+                toast(
+                    latest.title,
+                    latest.color === 'danger' ? 'error'
+                        : latest.color === 'warning' ? 'warning'
+                        : latest.color === 'success' ? 'success'
+                        : 'info',
+                );
+            } else if (newCount > 1) {
+                toast(`${newCount} new notifications`, 'info');
+            }
+        }
+
+        prevCountRef.current = count;
+    }, [count, notifications, showToasts]);
 
     // Close on click outside
     useEffect(() => {
@@ -65,7 +94,6 @@ export function NotificationBell() {
 
             {open && (
                 <div className="absolute right-0 top-full z-50 mt-1.5 w-80 rounded-xl border border-s-border bg-s-surface shadow-lg overflow-hidden">
-                    {/* Header */}
                     <div className="flex items-center justify-between px-4 py-3 border-b border-s-border">
                         <p className="text-sm font-medium text-s-text">Notifications</p>
                         {count > 0 && (
@@ -73,7 +101,6 @@ export function NotificationBell() {
                         )}
                     </div>
 
-                    {/* List */}
                     <div className="max-h-80 overflow-y-auto">
                         {count === 0 ? (
                             <div className="flex flex-col items-center justify-center py-10 px-4">
@@ -83,35 +110,28 @@ export function NotificationBell() {
                                 <p className="text-xs text-s-text-faint">No notifications</p>
                             </div>
                         ) : (
-                            notifications.map((notification, i) => {
-                                const color = notification.color ?? 'info';
-                                return (
-                                    <button
-                                        key={i}
-                                        type="button"
-                                        className="w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-s-hover transition-colors border-b border-s-border last:border-b-0"
-                                        onClick={() => {
-                                            setOpen(false);
-                                            if (notification.url) {
-                                                router.visit(notification.url);
-                                            }
-                                        }}
-                                    >
-                                        {/* Color dot */}
-                                        <div className={cn('w-2 h-2 rounded-full mt-1.5 shrink-0', dotColorMap[color] ?? dotColorMap.info)} />
-
-                                        <div className="min-w-0 flex-1">
-                                            <p className="text-sm font-medium text-s-text truncate">{notification.title}</p>
-                                            {notification.body && (
-                                                <p className="text-xs text-s-text-muted mt-0.5 line-clamp-2">{notification.body}</p>
-                                            )}
-                                            {notification.time && (
-                                                <p className="text-[11px] text-s-text-faint mt-1">{notification.time}</p>
-                                            )}
-                                        </div>
-                                    </button>
-                                );
-                            })
+                            notifications.map((notification, i) => (
+                                <button
+                                    key={i}
+                                    type="button"
+                                    className="w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-s-hover transition-colors border-b border-s-border last:border-b-0"
+                                    onClick={() => {
+                                        setOpen(false);
+                                        if (notification.url) router.visit(notification.url);
+                                    }}
+                                >
+                                    <div className={cn('w-2 h-2 rounded-full mt-1.5 shrink-0', dotColorMap[notification.color ?? 'info'] ?? dotColorMap.info)} />
+                                    <div className="min-w-0 flex-1">
+                                        <p className="text-sm font-medium text-s-text truncate">{notification.title}</p>
+                                        {notification.body && (
+                                            <p className="text-xs text-s-text-muted mt-0.5 line-clamp-2">{notification.body}</p>
+                                        )}
+                                        {notification.time && (
+                                            <p className="text-[11px] text-s-text-faint mt-1">{notification.time}</p>
+                                        )}
+                                    </div>
+                                </button>
+                            ))
                         )}
                     </div>
                 </div>
