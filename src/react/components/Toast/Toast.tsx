@@ -106,14 +106,25 @@ export function ToastContainer() {
     }, []);
 
     // Listen for flash messages from Inertia page visits
+    const lastFlashRef = useRef<string | null>(null);
+
     useEffect(() => {
         const remove = router.on('success', (event) => {
             const pg = (event as unknown as { detail?: { page?: { props?: Record<string, unknown> } } }).detail?.page;
             if (!pg?.props) return;
 
             const flash = pg.props.flash as { success?: string | null; error?: string | null } | undefined;
-            if (flash?.success) toast({ type: 'success', title: flash.success });
-            if (flash?.error) toast({ type: 'error', title: flash.error });
+            const msg = flash?.success ?? flash?.error ?? null;
+            const type = flash?.success ? 'success' : flash?.error ? 'error' : null;
+
+            // Only toast if it's a new flash message (not the same one re-delivered on partial reloads)
+            if (msg && type && msg !== lastFlashRef.current) {
+                lastFlashRef.current = msg;
+                toast({ type, title: msg });
+
+                // Clear after a tick so the same message can fire again if it's a genuinely new action
+                setTimeout(() => { lastFlashRef.current = null; }, 100);
+            }
         });
         return () => remove();
     }, []);
