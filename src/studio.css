@@ -69,6 +69,13 @@
     --s-accent-fg: var(--studio-dark-accent-fg, 255 255 255);
 }
 
+/* Reset host app's global border-color inside Studio panels */
+[data-studio-panel] *,
+[data-studio-panel] *::before,
+[data-studio-panel] *::after {
+    border-color: rgb(var(--s-border, 226 232 240));
+}
+
 /* Smooth theme transitions */
 [data-studio-panel] *,
 [data-studio-panel] *::before,
