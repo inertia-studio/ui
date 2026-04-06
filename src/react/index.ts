@@ -74,3 +74,21 @@ export {
 
 // Tabs
 export { TabGroup, TabPanel } from './components/Tabs';
+
+// Charts
+export { Chart, Sparkline } from './components/Charts';
+
+// Pages (used by resolveStudioPage in the Vite plugin)
+export {
+    ListPage,
+    CreatePage,
+    EditPage,
+    ViewPage,
+    LoginPage,
+    RegisterPage,
+    ForgotPasswordPage,
+    ResetPasswordPage,
+    VerifyEmailPage,
+    DashboardPage,
+    ProfilePage,
+} from './pages';

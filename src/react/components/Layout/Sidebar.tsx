@@ -23,6 +23,7 @@ interface SidebarProps {
 
 function SidebarContent({ collapsed, onToggleCollapse }: { collapsed: boolean; onToggleCollapse: () => void }) {
     const { panel, layout, navigation, user } = usePanel();
+    const { resolvedColorMode } = useStudioContext();
     const { invoke } = useStudioHooks();
     const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
     const isDashboardActive = pathname === panel?.path || pathname === panel?.path + '/';
@@ -35,7 +36,13 @@ function SidebarContent({ collapsed, onToggleCollapse }: { collapsed: boolean; o
                 <Link href={panel?.path ?? '/'} className="flex items-center gap-3 overflow-hidden">
                     {panel?.brandLogo ? (
                         <img
-                            src={collapsed && panel.brandLogoCollapsed ? panel.brandLogoCollapsed : panel.brandLogo}
+                            src={
+                                collapsed && panel.brandLogoCollapsed
+                                    ? panel.brandLogoCollapsed
+                                    : resolvedColorMode === 'dark' && (panel as Record<string, unknown>).brandLogoDark
+                                        ? String((panel as Record<string, unknown>).brandLogoDark)
+                                        : panel.brandLogo
+                            }
                             alt={panel.brandName}
                             className={cn('h-8 shrink-0 object-contain', collapsed ? 'w-8' : 'max-w-[140px]')}
                         />

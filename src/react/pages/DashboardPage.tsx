@@ -4,6 +4,7 @@ import { StudioProvider } from '../context/StudioContext';
 import { PanelLayout } from '../components/Layout';
 import { InlineTable } from '../components/Table/InlineTable';
 import { InlineForm } from '../components/Form/InlineForm';
+import { Chart, Sparkline } from '../components/Charts';
 import { Icon } from '../components/Icon';
 import { cn } from '../../shared/utils/cn';
 import type {
@@ -402,6 +403,34 @@ function SchemaRenderer({ items }: { items: Array<Record<string, unknown>> }) {
                 if (type === 'html') {
                     return (
                         <div key={i} className="text-sm text-s-text-secondary" dangerouslySetInnerHTML={{ __html: String(item.content ?? '') }} />
+                    );
+                }
+
+                // Chart (line, area, bar, donut)
+                if (type === 'chart') {
+                    return (
+                        <Chart
+                            key={i}
+                            type={(item.chartType ?? 'line') as 'line' | 'area' | 'bar' | 'donut'}
+                            data={(item.data ?? []) as { label: string; value: number; color?: string }[]}
+                            label={item.label as string | undefined}
+                            description={item.description as string | undefined}
+                            color={item.color as string | undefined}
+                            colors={item.colors as string[] | undefined}
+                            height={item.height as string | undefined}
+                        />
+                    );
+                }
+
+                // Sparkline
+                if (type === 'sparkline') {
+                    return (
+                        <Sparkline
+                            key={i}
+                            data={(item.data ?? []) as { label: string; value: number }[]}
+                            color={item.color as string | undefined}
+                            height={item.height as string | undefined}
+                        />
                     );
                 }
 
