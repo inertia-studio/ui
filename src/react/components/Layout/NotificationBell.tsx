@@ -117,7 +117,16 @@ export function NotificationBell() {
                     <div className="flex items-center justify-between px-4 py-3 border-b border-s-border">
                         <p className="text-sm font-medium text-s-text">Notifications</p>
                         {count > 0 && (
-                            <span className="text-[11px] text-s-text-faint">{count} new</span>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    router.post(`${panel?.path ?? ''}/notifications/read-all`, {}, { preserveScroll: true });
+                                    setOpen(false);
+                                }}
+                                className="text-[11px] text-s-accent hover:underline"
+                            >
+                                Mark all read
+                            </button>
                         )}
                     </div>
 
@@ -137,7 +146,20 @@ export function NotificationBell() {
                                     className="w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-s-hover transition-colors border-b border-s-border last:border-b-0"
                                     onClick={() => {
                                         setOpen(false);
-                                        if (notification.url) router.visit(notification.url);
+                                        if (notification.id) {
+                                            router.post(
+                                                `${panel?.path ?? ''}/notifications/${notification.id}/read`,
+                                                {},
+                                                {
+                                                    preserveScroll: true,
+                                                    onSuccess: () => {
+                                                        if (notification.url) router.visit(notification.url);
+                                                    },
+                                                },
+                                            );
+                                        } else if (notification.url) {
+                                            router.visit(notification.url);
+                                        }
                                     }}
                                 >
                                     <div className={cn('w-2 h-2 rounded-full mt-1.5 shrink-0', dotColorMap[notification.color ?? 'info'] ?? dotColorMap.info)} />
