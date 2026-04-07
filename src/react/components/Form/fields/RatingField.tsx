@@ -8,6 +8,7 @@ interface RatingFieldProps {
 }
 
 export function RatingField({ schema, value, onChange }: RatingFieldProps) {
+    // ratingIcon is intentionally separate from the schema's icon — could be wired up to render different glyphs
     const max = (schema as Record<string, unknown>).max as number ?? 5;
     const allowHalf = (schema as Record<string, unknown>).allowHalf as boolean ?? false;
     const activeColor = (schema as Record<string, unknown>).activeColor as string ?? '#f59e0b';
