@@ -32,6 +32,8 @@ import { RichEditorField } from './RichEditorField';
 import { OtpField } from './OtpField';
 import { MaskedField } from './MaskedField';
 import { RatingField } from './RatingField';
+import { CodeField } from './CodeField';
+import { MarkdownEditorField } from './MarkdownEditorField';
 
 export {
     TextField,
@@ -67,6 +69,8 @@ export {
     OtpField,
     MaskedField,
     RatingField,
+    CodeField,
+    MarkdownEditorField,
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -104,4 +108,6 @@ export const fieldComponentMap: Record<string, ComponentType<any>> = {
     otp: OtpField,
     masked: MaskedField,
     rating: RatingField,
+    code: CodeField,
+    markdownEditor: MarkdownEditorField,
 };

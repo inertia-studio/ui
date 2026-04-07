@@ -463,6 +463,42 @@ function SchemaRenderer({ items }: { items: Array<Record<string, unknown>> }) {
                     );
                 }
 
+                // Activity log
+                if (type === 'activity') {
+                    const entries = (item.entries ?? []) as Array<Record<string, unknown>>;
+                    const dotColor: Record<string, string> = { success: 'bg-emerald-500', warning: 'bg-amber-500', danger: 'bg-red-500', info: 'bg-s-accent' };
+                    return (
+                        <div key={i} className="rounded-xl border border-s-border bg-s-surface overflow-hidden">
+                            {item.label && (
+                                <div className="border-b border-s-border px-5 py-3.5">
+                                    <h3 className="text-sm font-semibold text-s-text">{String(item.label)}</h3>
+                                </div>
+                            )}
+                            <div className="px-5 py-4 space-y-0">
+                                {entries.map((entry, ei) => (
+                                    <div key={ei} className="flex gap-3">
+                                        <div className="flex flex-col items-center">
+                                            <div className={cn('w-2 h-2 rounded-full mt-2 shrink-0', dotColor[entry.color as string] ?? dotColor.info)} />
+                                            {ei < entries.length - 1 && <div className="w-px flex-1 bg-s-border" />}
+                                        </div>
+                                        <div className="pb-4 min-w-0 flex-1">
+                                            <div className="flex items-center gap-2">
+                                                <p className="text-sm font-medium text-s-text">{String(entry.title ?? '')}</p>
+                                                {entry.user && <span className="text-xs text-s-accent font-medium">{String(entry.user)}</span>}
+                                            </div>
+                                            {entry.description && <p className="text-xs text-s-text-muted mt-0.5">{String(entry.description)}</p>}
+                                            {entry.time && <p className="text-[11px] text-s-text-faint mt-1">{String(entry.time)}</p>}
+                                        </div>
+                                    </div>
+                                ))}
+                                {entries.length === 0 && (
+                                    <p className="text-sm text-s-text-faint text-center py-6">No activity yet</p>
+                                )}
+                            </div>
+                        </div>
+                    );
+                }
+
                 // Unknown
                 return (
                     <div key={i} className="rounded-xl border border-dashed border-s-border bg-s-surface-alt p-5">
