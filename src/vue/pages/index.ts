@@ -1,0 +1,11 @@
+export { default as ListPage } from './ListPage.vue';
+export { default as CreatePage } from './CreatePage.vue';
+export { default as EditPage } from './EditPage.vue';
+export { default as ViewPage } from './ViewPage.vue';
+export { default as LoginPage } from './LoginPage.vue';
+export { default as RegisterPage } from './RegisterPage.vue';
+export { default as ForgotPasswordPage } from './ForgotPasswordPage.vue';
+export { default as ResetPasswordPage } from './ResetPasswordPage.vue';
+export { default as VerifyEmailPage } from './VerifyEmailPage.vue';
+export { default as DashboardPage } from './DashboardPage.vue';
+export { default as ProfilePage } from './ProfilePage.vue';
