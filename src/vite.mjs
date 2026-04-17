@@ -80,7 +80,33 @@ export function resolveStudioPage(name, pages) {
         if (key) return pages[key]();
     }
 
-    // Dynamic import from the package
+    // Auto-detect framework by looking at the caller's pages glob, or
+    // let the consumer's Vite plugin pick the right bundle.
+    // If a `pages` glob was given and contains .vue files, prefer vue adapter;
+    // otherwise fall back to react. For fully automatic detection we inspect
+    // any key extension; default to react for backwards compatibility.
+    const framework = detectFramework(pages);
+
+    if (framework === 'vue') {
+        return import('@inertia-studio/ui/vue').then((mod) => {
+            const Component = mod[pageName];
+            if (!Component) {
+                throw new Error(`[Inertia Studio] Page component "${pageName}" not found in @inertia-studio/ui/vue`);
+            }
+            return { default: Component };
+        });
+    }
+
+    if (framework === 'svelte') {
+        return import('@inertia-studio/ui/svelte').then((mod) => {
+            const Component = mod[pageName];
+            if (!Component) {
+                throw new Error(`[Inertia Studio] Page component "${pageName}" not found in @inertia-studio/ui/svelte`);
+            }
+            return { default: Component };
+        });
+    }
+
     return import('@inertia-studio/ui/react').then((mod) => {
         const Component = mod[pageName];
         if (!Component) {
@@ -88,6 +114,20 @@ export function resolveStudioPage(name, pages) {
         }
         return { default: Component };
     });
+}
+
+/**
+ * @param {Record<string, () => Promise<{default: any}>> | undefined} pages
+ * @returns {'react' | 'vue' | 'svelte'}
+ */
+function detectFramework(pages) {
+    if (pages) {
+        const keys = Object.keys(pages);
+        if (keys.some((k) => k.endsWith('.vue'))) return 'vue';
+        if (keys.some((k) => k.endsWith('.svelte'))) return 'svelte';
+        if (keys.some((k) => k.endsWith('.tsx') || k.endsWith('.jsx'))) return 'react';
+    }
+    return 'react';
 }
 
 /**
