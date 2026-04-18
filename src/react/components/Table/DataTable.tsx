@@ -362,6 +362,10 @@ export function DataTable({ schema, data, module, panelPath, onSimpleEdit }: Dat
                                         alignmentClasses[column.alignment] ?? 'text-left',
                                         column.sortable && 'cursor-pointer select-none hover:text-s-text',
                                     )}
+                                    style={{
+                                        width: (column as Record<string, unknown>).width as string | undefined,
+                                        minWidth: (column as Record<string, unknown>).minWidth as string | undefined,
+                                    }}
                                     onClick={() => handleSort(column)}
                                 >
                                     <span className="inline-flex items-center">
@@ -481,6 +485,10 @@ export function DataTable({ schema, data, module, panelPath, onSimpleEdit }: Dat
                                                     alignmentClasses[column.alignment] ?? 'text-left',
                                                     !column.wrap && 'whitespace-nowrap',
                                                 )}
+                                                style={{
+                                                    width: (column as Record<string, unknown>).width as string | undefined,
+                                                    minWidth: (column as Record<string, unknown>).minWidth as string | undefined,
+                                                }}
                                             >
                                                 {renderCell(column, record)}
                                                 {column.description && (
